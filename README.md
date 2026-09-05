@@ -139,3 +139,18 @@ This is a standard Next.js app, so it deploys as-is to Vercel
 (`vercel deploy`) or any host that runs Node.js. Set `IMAGE_PROVIDER`
 and `GEMINI_API_KEY` as environment variables on the host — never
 commit `.env.local`.
+
+## Pushing this to GitLab
+
+This folder is already a git repo with one commit. To share it:
+
+1. On GitLab, create a new empty project (no README/license, so it
+   doesn't conflict with what's already committed here).
+2. Point this repo at it and push:
+   ```bash
+   git remote add origin <your-gitlab-project-url>.git
+   git branch -M main
+   git push -u origin main
+   ```
+3. Add teammates/your professor as members on the GitLab project
+   (Project → Manage → Members) so they can view or clone it.
