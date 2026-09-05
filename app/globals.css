@@ -1,0 +1,25 @@
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Work+Sans:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: oklch(0.97 0.012 75);
+  --surface: oklch(0.995 0.004 75);
+  --surface-2: oklch(0.94 0.014 75);
+  --ink: oklch(0.24 0.02 60);
+  --ink-soft: oklch(0.48 0.02 60);
+  --ink-faint: oklch(0.66 0.018 60);
+  --line: oklch(0.88 0.012 75);
+  --clay: oklch(0.62 0.13 40);
+  --clay-soft: oklch(0.92 0.028 40);
+
+  --font-display: "Newsreader", Georgia, serif;
+  --font-body: "Work Sans", system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
