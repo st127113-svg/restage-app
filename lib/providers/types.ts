@@ -1,3 +1,5 @@
+import type { SpaceDetails } from "@/lib/constants";
+
 export interface GenerateParams {
   /** Raw base64 payload of the uploaded photo, no "data:" prefix. */
   imageBase64: string;
@@ -7,6 +9,15 @@ export interface GenerateParams {
   style: string;
   /** Full text instruction built by lib/prompt.ts */
   prompt: string;
+  /**
+   * Raw context behind `prompt`, passed through as-is so a provider
+   * that wants to build its own prompt (e.g. an n8n workflow) doesn't
+   * have to re-derive it. mock/gemini ignore these and just use
+   * `prompt`.
+   */
+  purpose?: string;
+  space?: SpaceDetails;
+  freeNote?: string;
 }
 
 export interface GenerateResult {

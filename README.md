@@ -93,6 +93,52 @@ OpenAI credits).
 https://ai.google.dev/gemini-api/docs/models for the current image
 model id and set `GEMINI_IMAGE_MODEL` in `.env.local` if it has changed.
 
+## Using n8n instead of calling Gemini directly
+
+Set `IMAGE_PROVIDER=n8n` and this app stops calling Gemini itself —
+`lib/providers/n8n.ts` instead POSTs the raw inputs to an n8n webhook
+and the workflow is responsible for building the Nano Banana prompt
+and calling the model. Nothing else in the app changes; the response
+just has to come back in the same shape `lib/providers/gemini.ts`
+would have returned.
+
+**Request** (this app -> your n8n webhook):
+
+```json
+{
+  "imageBase64": "...",
+  "mimeType": "image/jpeg",
+  "roomType": "Kitchen",
+  "style": "Scandinavian",
+  "purpose": "cooking most nights, also homework",
+  "space": { "lengthM": "4.2", "widthM": "3.5", "keep": "the dining table", "remove": "", "needs": "" },
+  "freeNote": "lots of natural light",
+  "suggestedPrompt": "Redecorate this photo of a kitchen in a scandinavian..."
+}
+```
+
+`suggestedPrompt` is the same text this app would have sent Gemini
+itself (built by `lib/prompt.ts`) — use it directly in the workflow if
+you don't want to rebuild prompt logic in n8n, or ignore it and build
+your own from the raw fields above.
+
+**Response** (your n8n webhook -> this app), returned from a "Respond
+to Webhook" node:
+
+```json
+{ "imageBase64": "<base64, no data: prefix>", "mimeType": "image/png" }
+```
+
+Env vars:
+
+```
+IMAGE_PROVIDER=n8n
+N8N_WEBHOOK_URL=https://your-instance.app.n8n.cloud/webhook/restage-generate
+```
+
+See the n8n workflow to build for this in the setup notes shared
+alongside this project.
+
 ## Getting started
 
 Requires Node.js 18.18+.
@@ -150,6 +196,7 @@ lib/
     types.ts              — the ImageProvider interface every provider implements
     mock.ts                — no-key-needed stand-in
     gemini.ts              — real Gemini image editing call
+    n8n.ts                  — delegates generation to an n8n workflow
     index.ts               — picks a provider from IMAGE_PROVIDER
 ```
 

@@ -1,10 +1,12 @@
 import type { ImageProvider } from "./types";
 import { mockProvider } from "./mock";
 import { geminiProvider } from "./gemini";
+import { n8nProvider } from "./n8n";
 
 const providers: Record<string, ImageProvider> = {
   mock: mockProvider,
   gemini: geminiProvider,
+  n8n: n8nProvider,
 };
 
 export function getProvider(): ImageProvider {

@@ -56,6 +56,9 @@ export async function POST(request: NextRequest) {
       roomType,
       style,
       prompt,
+      purpose,
+      space,
+      freeNote,
     });
 
     return NextResponse.json({
