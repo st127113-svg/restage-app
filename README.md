@@ -7,6 +7,13 @@ built from the design mockup below.
 **Design mockup:** https://claude.ai/code/artifact/4819bd0a-cc6c-479e-80b1-c2f7cb9ac9d9
 (the 4-screen flow this app implements: upload → room & style → generating → result)
 
+**Customer journey map:** [`/journey`](./app/journey/page.tsx) — the fuller
+Discover → Design → Plan → Optimize → Implement vision behind this project
+(15 stages across 5 phases, plus the business model). This prototype
+currently implements the Design phase's upload/style/generate loop; the
+rest of the journey (space details, budget-aware planning, product/pro
+matching, cost estimation) is mapped out but not yet built.
+
 ## How it works
 
 ```
@@ -139,6 +146,19 @@ This is a standard Next.js app, so it deploys as-is to Vercel
 (`vercel deploy`) or any host that runs Node.js. Set `IMAGE_PROVIDER`
 and `GEMINI_API_KEY` as environment variables on the host — never
 commit `.env.local`.
+
+### GitHub Pages (static, docs-only)
+
+`.github/workflows/deploy-pages.yml` publishes a static export of this
+app to GitHub Pages on every push to `main`/`master` (enable it once
+under Settings → Pages → Source: GitHub Actions). That export is
+useful for sharing static pages like `/journey`, but **the interactive
+app doesn't fully work there**: GitHub Pages can't run the
+`/api/generate` route (it's a server function calling Gemini), so the
+workflow removes `app/api` before building and the "Generate" step
+will fail with a 404 on the deployed Pages site. Use Vercel/Node
+hosting above for a working end-to-end demo; use Pages for the journey
+map / static assets.
 
 ## Pushing this to GitLab
 
