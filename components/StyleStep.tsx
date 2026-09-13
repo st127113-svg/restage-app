@@ -1,6 +1,7 @@
 "use client";
 
-import { ROOM_TYPES, STYLES, type RoomType, type Style } from "@/lib/constants";
+import { STYLES, type Style } from "@/lib/constants";
+import { PhotoPreview } from "./PhotoPreview";
 import { Stepper } from "./Stepper";
 
 const STYLE_SWATCH: Record<Style, { bg: string; accent: string }> = {
@@ -12,72 +13,34 @@ const STYLE_SWATCH: Record<Style, { bg: string; accent: string }> = {
   Traditional: { bg: "oklch(0.94 0.03 130)", accent: "oklch(0.35 0.06 150)" },
 };
 
-export function ConfigureStep({
+export function StyleStep({
   imageDataUrl,
   fileName,
-  roomType,
   style,
-  onChangeRoomType,
   onChangeStyle,
   onChangePhoto,
-  onGenerate,
-  error,
+  onBack,
+  onContinue,
 }: {
   imageDataUrl: string;
   fileName: string;
-  roomType: RoomType;
   style: Style;
-  onChangeRoomType: (r: RoomType) => void;
   onChangeStyle: (s: Style) => void;
   onChangePhoto: () => void;
-  onGenerate: () => void;
-  error: string | null;
+  onBack: () => void;
+  onContinue: () => void;
 }) {
   return (
     <div className="flex min-h-[900px] flex-col">
       <nav className="flex items-center justify-between px-16 pt-8">
         <div className="font-display text-xl font-semibold">Restage</div>
-        <Stepper current={1} />
+        <Stepper stage={5} />
       </nav>
 
       <div className="flex flex-1 gap-16 px-16 pb-16 pt-10">
-        <div className="flex w-[340px] flex-col gap-4">
-          <div className="overflow-hidden rounded-2xl border border-line">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageDataUrl} alt="Uploaded room" className="block w-full object-cover" />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="truncate text-sm text-ink-faint">{fileName}</span>
-            <button onClick={onChangePhoto} className="shrink-0 text-sm text-clay hover:text-ink">
-              Change photo
-            </button>
-          </div>
-        </div>
+        <PhotoPreview imageDataUrl={imageDataUrl} fileName={fileName} onChangePhoto={onChangePhoto} />
 
         <div className="flex flex-1 flex-col gap-10">
-          <section>
-            <h2 className="mb-2 font-display text-2xl">What room is this?</h2>
-            <p className="mb-5 text-sm text-ink-soft">
-              Restage uses this to keep proportions and fixtures believable.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {ROOM_TYPES.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => onChangeRoomType(r)}
-                  className={
-                    "flex h-11 items-center rounded-full border px-5 text-[15px] transition-colors " +
-                    (r === roomType
-                      ? "border-ink bg-ink text-surface"
-                      : "border-line bg-surface text-ink-soft hover:border-ink")
-                  }
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </section>
-
           <section>
             <h2 className="mb-2 font-display text-2xl">Pick a style</h2>
             <p className="mb-5 text-sm text-ink-soft">
@@ -115,17 +78,17 @@ export function ConfigureStep({
             </div>
           </section>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <button
-            onClick={onGenerate}
-            className="flex h-[52px] w-fit items-center gap-2.5 rounded-lg bg-ink px-7 text-base font-medium text-surface hover:bg-clay"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" />
-            </svg>
-            Generate my redesign
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onContinue}
+              className="flex h-[52px] items-center rounded-lg bg-ink px-7 text-base font-medium text-surface hover:bg-clay"
+            >
+              Continue
+            </button>
+            <button onClick={onBack} className="text-sm text-ink-soft hover:text-ink">
+              Back
+            </button>
+          </div>
         </div>
       </div>
     </div>

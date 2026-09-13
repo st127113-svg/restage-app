@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildPrompt } from "@/lib/prompt";
 import { getProvider, ProviderError } from "@/lib/providers";
-import { MAX_UPLOAD_BYTES } from "@/lib/constants";
+import { MAX_UPLOAD_BYTES, type SpaceDetails } from "@/lib/constants";
 
 // sharp (used by the mock provider) needs the Node runtime, not edge.
 export const runtime = "nodejs";
@@ -14,6 +14,9 @@ interface GenerateRequestBody {
   mimeType?: string;
   roomType?: string;
   style?: string;
+  purpose?: string;
+  space?: SpaceDetails;
+  freeNote?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { imageBase64, mimeType, roomType, style } = body;
+  const { imageBase64, mimeType, roomType, style, purpose, space, freeNote } = body;
 
   if (!imageBase64 || !mimeType || !roomType || !style) {
     return NextResponse.json(
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const prompt = buildPrompt(roomType, style);
+  const prompt = buildPrompt(roomType, style, { purpose, space, freeNote });
 
   try {
     const provider = getProvider();

@@ -8,17 +8,27 @@ export function ResultStep({
   afterImage,
   roomType,
   style,
+  isRefining,
+  refineError,
+  onRefine,
   onTryAnotherStyle,
   onStartOver,
+  onContinue,
 }: {
   beforeImage: string;
   afterImage: string;
   roomType: string;
   style: string;
+  isRefining: boolean;
+  refineError: string | null;
+  onRefine: (note: string) => void;
   onTryAnotherStyle: () => void;
   onStartOver: () => void;
+  onContinue: () => void;
 }) {
   const [percent, setPercent] = useState(50);
+  const [showModify, setShowModify] = useState(false);
+  const [note, setNote] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
 
@@ -34,7 +44,7 @@ export function ResultStep({
     <div className="flex min-h-[900px] flex-col">
       <nav className="flex items-center justify-between px-16 pt-8">
         <div className="font-display text-xl font-semibold">Restage</div>
-        <Stepper current={2} />
+        <Stepper stage={8} />
       </nav>
 
       <div className="flex flex-1 flex-col items-center gap-6 px-16 pb-14 pt-8">
@@ -106,6 +116,12 @@ export function ResultStep({
               Download image
             </a>
             <button
+              onClick={() => setShowModify((v) => !v)}
+              className="flex h-[52px] items-center rounded-lg border border-line bg-surface px-6 text-[15px] font-medium hover:border-ink"
+            >
+              {showModify ? "Hide changes" : "Request changes"}
+            </button>
+            <button
               onClick={onTryAnotherStyle}
               className="flex h-[52px] items-center rounded-lg border border-line bg-surface px-6 text-[15px] font-medium hover:border-ink"
             >
@@ -117,10 +133,44 @@ export function ResultStep({
           </button>
         </div>
 
-        <p className="w-full max-w-[1180px] text-[13px] text-ink-faint">
-          AI-generated preview, for inspiration only — not a guarantee of
-          exact final results.
-        </p>
+        {showModify && (
+          <div className="flex w-full max-w-[1180px] flex-col gap-3 rounded-2xl border border-line bg-surface p-6">
+            <div className="text-sm font-medium text-ink">
+              Request changes — color, style, mood, specific items
+            </div>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. warmer wood tones, swap the rug for something lighter"
+              rows={2}
+              className="w-full rounded-xl border border-line bg-bg p-3.5 text-[15px] text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none"
+            />
+            {refineError && <p className="text-sm text-red-600">{refineError}</p>}
+            <button
+              onClick={() => onRefine(note)}
+              disabled={isRefining || !note.trim()}
+              className="flex h-11 w-fit items-center rounded-lg bg-ink px-5 text-sm font-medium text-surface hover:bg-clay disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink"
+            >
+              {isRefining ? "Regenerating…" : "Regenerate with these changes"}
+            </button>
+          </div>
+        )}
+
+        <div className="flex w-full max-w-[1180px] items-center justify-between border-t border-line pt-6">
+          <p className="max-w-[60ch] text-[13px] text-ink-faint">
+            AI-generated preview, for inspiration only — not a guarantee of
+            exact final results.
+          </p>
+          <button
+            onClick={onContinue}
+            className="flex h-[48px] shrink-0 items-center gap-2 rounded-lg bg-ink px-6 text-[15px] font-medium text-surface hover:bg-clay"
+          >
+            Turn this into a plan
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

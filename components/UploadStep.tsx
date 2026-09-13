@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import { MAX_UPLOAD_BYTES } from "@/lib/constants";
 
 export function UploadStep({
@@ -33,12 +32,6 @@ export function UploadStep({
     <div className="flex min-h-[900px] flex-col">
       <nav className="flex items-center justify-between px-16 py-8">
         <div className="font-display text-xl font-semibold">Restage</div>
-        <Link
-          href="/journey"
-          className="text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-ink"
-        >
-          Customer journey map →
-        </Link>
       </nav>
 
       <div className="flex flex-1 items-center gap-20 px-16 pb-16">

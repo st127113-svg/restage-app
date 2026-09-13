@@ -1,37 +1,62 @@
 # Restage — AI room redesign prototype
 
-Upload a photo of a room, pick a room type and a style, and get back an
-AI-redecorated version of the same room. This is a working prototype
-built from the design mockup below.
+Upload a photo of a room and walk the full customer journey behind this
+project — Discover → Design → Plan → Optimize → Implement — ending with
+a priced, shoppable, hireable plan, not just a pretty AI image.
 
 **Design mockup:** https://claude.ai/code/artifact/4819bd0a-cc6c-479e-80b1-c2f7cb9ac9d9
-(the 4-screen flow this app implements: upload → room & style → generating → result)
-
-**Customer journey map:** [`/journey`](./app/journey/page.tsx) — the fuller
-Discover → Design → Plan → Optimize → Implement vision behind this project
-(15 stages across 5 phases, plus the business model). This prototype
-currently implements the Design phase's upload/style/generate loop; the
-rest of the journey (space details, budget-aware planning, product/pro
-matching, cost estimation) is mapped out but not yet built.
+(the original 4-screen flow: upload → room & style → generating → result)
 
 ## How it works
 
+The app is a single client-side state machine (`app/page.tsx`) that
+walks through all 15 stages of the journey as real screens:
+
 ```
-Browser (app/page.tsx)
-  1. UploadStep      — user drops/selects a photo, read as a data URL
-  2. ConfigureStep   — user picks room type + style
-  3. GeneratingStep  — shown while the request is in flight
-  4. ResultStep      — before/after slider, download button
+Discover
+  1-2. UploadStep        — drop/select a photo, read as a data URL
+  3.   PurposeStep        — room type + how the room is actually used
+  4.   SpaceStep          — dimensions, what to keep/remove, needs
+
+Design
+  5.   StyleStep          — pick a design style
+  6.   BudgetStep          — total budget + scope (furniture/décor/reno)
+  7.   FreePromptStep      — anything else, in the customer's own words
         |
-        | POST /api/generate  { imageBase64, mimeType, roomType, style }
+        | POST /api/generate { imageBase64, mimeType, roomType, style,
+        |                      purpose, space, freeNote }
         v
-app/api/generate/route.ts
-  - builds a text prompt (lib/prompt.ts) describing the requested
-    room type + style, instructing the model to preserve the room's
-    architecture and only change decor
-  - calls an image provider (lib/providers/*)
-        |
-        v
+  8.   GeneratingStep + ResultStep — the AI redesign, before/after slider,
+       plus a "Request changes" box that regenerates in place (stage 9)
+
+Plan
+  10.  NeedsStep           — the design broken into furniture/materials/services
+  11.  ProductsStep        — each need matched to a mock supplier + price
+  12.  CostStep            — itemized estimate, scaled by budget scope
+
+Optimize
+  13.  BudgetCheckStep     — budget vs. estimated cost, side by side
+  14.  AdjustStep          — swaps in cheaper alternatives if over budget
+
+Implement
+  15.  PlanStep            — final buy list, hire list, total, downloadable
+```
+
+`app/api/generate/route.ts` is the only server call in the whole flow —
+everything else (stages 3-7, 9-15) is client-side, driven by
+`lib/planning.ts`, which plays the same role for the planning stages
+that `lib/providers/mock.ts` plays for image generation: believable,
+deterministic mock data (Thai-baht prices, suppliers, contacts) standing
+in for a real catalog/quote API, so the whole journey can be demoed
+without needing real supplier integrations.
+
+For the AI step: `app/api/generate/route.ts` builds a text prompt
+(`lib/prompt.ts`) from the room type, style, and whatever the customer
+filled in during Purpose/Space/Free-prompt, instructing the model to
+preserve the room's architecture and only change decor, then calls an
+image provider (`lib/providers/*`):
+
+```
 lib/providers/index.ts  -- picks a provider based on IMAGE_PROVIDER
   - mock.ts    -- no API key needed. Visibly tints the uploaded photo
                   and stamps a "MOCK PREVIEW" banner on it, so the
@@ -97,18 +122,30 @@ the whole flow immediately.
 
 ```
 app/
-  page.tsx              — top-level state machine (upload/configure/generating/result)
+  page.tsx              — top-level state machine, all 15 journey stages
   api/generate/route.ts — the one API route; validates input, calls a provider
   globals.css           — palette + fonts (matches the design mockup)
 components/
-  UploadStep.tsx
-  ConfigureStep.tsx
-  GeneratingStep.tsx
-  ResultStep.tsx         — before/after slider + download
-  Stepper.tsx
+  UploadStep.tsx         — stage 1-2
+  PurposeStep.tsx         — stage 3
+  SpaceStep.tsx           — stage 4
+  StyleStep.tsx           — stage 5
+  BudgetStep.tsx          — stage 6
+  FreePromptStep.tsx      — stage 7, triggers generation
+  GeneratingStep.tsx      — stage 8 loading state
+  ResultStep.tsx          — stage 8 result + stage 9 request-changes
+  NeedsStep.tsx           — stage 10
+  ProductsStep.tsx        — stage 11
+  CostStep.tsx            — stage 12
+  BudgetCheckStep.tsx     — stage 13
+  AdjustStep.tsx          — stage 14
+  PlanStep.tsx            — stage 15
+  PhotoPreview.tsx        — shared uploaded-photo sidebar (stages 3-7)
+  Stepper.tsx             — 5-phase progress indicator
 lib/
-  constants.ts           — room types, styles, upload size limit
+  constants.ts           — room types, styles, upload size limit, space details type
   prompt.ts               — builds the text instruction sent to the model
+  planning.ts             — mock catalog/pricing engine for stages 10-15
   providers/
     types.ts              — the ImageProvider interface every provider implements
     mock.ts                — no-key-needed stand-in
@@ -147,18 +184,16 @@ This is a standard Next.js app, so it deploys as-is to Vercel
 and `GEMINI_API_KEY` as environment variables on the host — never
 commit `.env.local`.
 
-### GitHub Pages (static, docs-only)
+### GitHub Pages (static)
 
 `.github/workflows/deploy-pages.yml` publishes a static export of this
 app to GitHub Pages on every push to `main`/`master` (enable it once
-under Settings → Pages → Source: GitHub Actions). That export is
-useful for sharing static pages like `/journey`, but **the interactive
-app doesn't fully work there**: GitHub Pages can't run the
-`/api/generate` route (it's a server function calling Gemini), so the
-workflow removes `app/api` before building and the "Generate" step
-will fail with a 404 on the deployed Pages site. Use Vercel/Node
-hosting above for a working end-to-end demo; use Pages for the journey
-map / static assets.
+under Settings → Pages → Source: GitHub Actions). Stages 1-7 and 9-15
+are all client-side, so they work fine on a static export; only the
+"Generate my redesign" call to `/api/generate` needs a real server
+(it calls Gemini), so the workflow removes `app/api` before building
+and that one step will fail with a 404 on the deployed Pages site. Use
+Vercel/Node hosting above for a fully working end-to-end demo.
 
 ## Pushing this to GitLab
 
