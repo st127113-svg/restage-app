@@ -76,7 +76,7 @@ export function ResultStep({
           <img src={beforeImage} alt="Before" className="block w-full" />
           <div
             className="absolute inset-0 overflow-hidden"
-            style={{ clipPath: `inset(0 ${100 - percent}% 0 0)` }}
+            style={{ clipPath: `inset(0 0 0 ${percent}%)` }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={afterImage} alt="After" className="block w-full" />

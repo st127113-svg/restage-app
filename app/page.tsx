@@ -22,6 +22,7 @@ import {
   type SpaceDetails,
 } from "@/lib/constants";
 import type { SuggestedProduct } from "@/lib/providers";
+import { buildPrompt } from "@/lib/prompt";
 import {
   CATALOG_BY_ROOM,
   estimateCost,
@@ -100,6 +101,15 @@ export default function Home() {
     setStep("purpose");
   }
 
+  // Calls the n8n webhook directly from the browser instead of proxying
+  // through /api/generate. The full round trip (Gemini image gen +
+  // furniture ID + the AI Agent matching against Lazada) can take well
+  // over a minute, which blew past Vercel's serverless function time
+  // limit and came back as Vercel's own HTML error page instead of
+  // JSON. The browser has no such limit, so calling n8n directly avoids
+  // that entirely. Requires NEXT_PUBLIC_N8N_WEBHOOK_URL to be set (it's
+  // exposed to the client on purpose -- it only triggers the workflow,
+  // your Lazada credentials stay inside n8n and are never sent back).
   async function callGenerate(
     note: string,
   ): Promise<
@@ -107,11 +117,21 @@ export default function Home() {
     | { ok: false; error: string }
   > {
     if (!imageDataUrl) return { ok: false, error: "No photo uploaded." };
+    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+    if (!webhookUrl) {
+      return {
+        ok: false,
+        error:
+          "NEXT_PUBLIC_N8N_WEBHOOK_URL is not set. Add it in Vercel's Environment Variables (and .env.local for local dev), then redeploy.",
+      };
+    }
     const [header, base64] = imageDataUrl.split(",");
     const mimeType = header.match(/data:(.*);base64/)?.[1] ?? "image/jpeg";
+    const prompt = buildPrompt(roomType, style, { purpose, space, freeNote: note });
 
+    let res: Response;
     try {
-      const res = await fetch("/api/generate", {
+      res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -122,18 +142,73 @@ export default function Home() {
           purpose,
           space,
           freeNote: note,
+          suggestedPrompt: prompt,
         }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Generation failed.");
-      return {
-        ok: true,
-        image: `data:${json.mimeType};base64,${json.image}`,
-        suggestedProducts: Array.isArray(json.suggestedProducts) ? json.suggestedProducts : [],
-      };
     } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Generation failed." };
+      return {
+        ok: false,
+        error:
+          err instanceof Error
+            ? `Could not reach the n8n webhook: ${err.message}`
+            : "Could not reach the n8n webhook.",
+      };
     }
+
+    // Read as text first -- if n8n errored out (inactive workflow, a
+    // node crash, CORS block surfaced as an opaque failure, etc.) the
+    // body is often plain text or an HTML error page, not JSON, and
+    // res.json() would throw an unhelpful "Unexpected token" error.
+    const rawText = await res.text();
+    let json: Record<string, unknown> | null = null;
+    try {
+      json = JSON.parse(rawText);
+    } catch {
+      return {
+        ok: false,
+        error: res.ok
+          ? `n8n returned a non-JSON response: ${rawText.slice(0, 200)}`
+          : `n8n returned ${res.status}: ${rawText.slice(0, 200)}`,
+      };
+    }
+
+    if (!res.ok) {
+      const message =
+        (typeof json?.error === "string" && json.error) ||
+        (typeof json?.message === "string" && json.message) ||
+        `n8n returned ${res.status}.`;
+      return { ok: false, error: message };
+    }
+
+    const imageBase64Result = json?.imageBase64;
+    if (!imageBase64Result || typeof imageBase64Result !== "string") {
+      return {
+        ok: false,
+        error:
+          'n8n did not return an "imageBase64" field. Check the workflow\'s Respond to Webhook node.',
+      };
+    }
+    const resultMimeType = typeof json?.mimeType === "string" ? json.mimeType : "image/png";
+
+    const rawProducts = Array.isArray(json?.suggestedProducts) ? json.suggestedProducts : [];
+    const suggestedProducts: SuggestedProduct[] = rawProducts
+      .filter((p: unknown): p is Record<string, unknown> => !!p && typeof p === "object")
+      .map((p: Record<string, unknown>) => ({
+        item: typeof p.item === "string" ? p.item : "Item",
+        matched: p.matched === true,
+        name: typeof p.name === "string" ? p.name : undefined,
+        price: typeof p.price === "number" ? p.price : undefined,
+        currency: typeof p.currency === "string" ? p.currency : undefined,
+        image: typeof p.image === "string" ? p.image : undefined,
+        productUrl: typeof p.productUrl === "string" ? p.productUrl : undefined,
+        reason: typeof p.reason === "string" ? p.reason : undefined,
+      }));
+
+    return {
+      ok: true,
+      image: `data:${resultMimeType};base64,${imageBase64Result}`,
+      suggestedProducts,
+    };
   }
 
   async function handleGenerate() {
