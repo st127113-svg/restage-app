@@ -20,10 +20,29 @@ export interface GenerateParams {
   freeNote?: string;
 }
 
+export interface SuggestedProduct {
+  /** The furniture/decor item this was matched against, e.g. "Grey 3-seat sofa". */
+  item: string;
+  matched: boolean;
+  name?: string;
+  price?: number;
+  currency?: string;
+  image?: string;
+  /** Link to the real product page so the user can go buy it. */
+  productUrl?: string;
+  reason?: string;
+}
+
 export interface GenerateResult {
   /** Raw base64 payload of the generated photo, no "data:" prefix. */
   imageBase64: string;
   mimeType: string;
+  /**
+   * Real product matches for the furniture identified in the redesigned
+   * photo, when the provider supports it (currently only the n8n
+   * provider populates this -- mock/gemini leave it undefined).
+   */
+  suggestedProducts?: SuggestedProduct[];
 }
 
 export interface ImageProvider {

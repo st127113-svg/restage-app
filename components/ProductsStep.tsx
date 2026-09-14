@@ -1,18 +1,21 @@
 "use client";
 
 import type { RoomType } from "@/lib/constants";
+import type { SuggestedProduct } from "@/lib/providers";
 import { CATALOG_BY_ROOM, formatBaht } from "@/lib/planning";
 import { Stepper } from "./Stepper";
 
 export function ProductsStep({
   roomType,
   selected,
+  suggestedProducts = [],
   onToggle,
   onBack,
   onContinue,
 }: {
   roomType: RoomType;
   selected: Record<string, boolean>;
+  suggestedProducts?: SuggestedProduct[];
   onToggle: (id: string) => void;
   onBack: () => void;
   onContinue: () => void;
@@ -39,6 +42,60 @@ export function ProductsStep({
               have or want to source on your own.
             </p>
           </div>
+
+          {suggestedProducts.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <h2 className="font-display text-lg text-ink">Matched on Lazada</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {suggestedProducts
+                  .filter((p) => p.matched)
+                  .map((p, i) => (
+                    <a
+                      key={`${p.item}-${i}`}
+                      href={p.productUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex gap-3 rounded-xl border border-line bg-surface p-3 transition-colors hover:border-ink"
+                    >
+                      {p.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.image}
+                          alt={p.name ?? p.item}
+                          className="h-20 w-20 shrink-0 rounded-lg object-cover"
+                        />
+                      )}
+                      <div className="flex flex-1 flex-col justify-between gap-1">
+                        <div>
+                          <div className="text-[12px] text-ink-faint">{p.item}</div>
+                          <div className="text-[14px] font-medium leading-snug text-ink">
+                            {p.name}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="font-display text-base text-ink">
+                            {typeof p.price === "number" ? formatBaht(p.price) : "—"}
+                          </span>
+                          <span className="text-[12px] font-medium text-clay">
+                            View on Lazada &rarr;
+                          </span>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+              </div>
+              {suggestedProducts.some((p) => !p.matched) && (
+                <p className="text-[12px] text-ink-faint">
+                  No real product match found for:{" "}
+                  {suggestedProducts
+                    .filter((p) => !p.matched)
+                    .map((p) => p.item)
+                    .join(", ")}
+                  .
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col gap-2.5">
             {items.map((item) => {

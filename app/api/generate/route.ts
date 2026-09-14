@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       image: result.imageBase64,
       mimeType: result.mimeType,
+      suggestedProducts: result.suggestedProducts ?? [],
     });
   } catch (err) {
     const message =

@@ -23,3 +23,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scratch files from n8n workflow debugging -- not part of the app,
+# and some contain real API credentials. Never commit these.
+Claude outputs/

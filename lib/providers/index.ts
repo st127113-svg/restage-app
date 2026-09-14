@@ -20,5 +20,5 @@ export function getProvider(): ImageProvider {
   return provider;
 }
 
-export type { GenerateParams, GenerateResult, ImageProvider } from "./types";
+export type { GenerateParams, GenerateResult, ImageProvider, SuggestedProduct } from "./types";
 export { ProviderError } from "./types";

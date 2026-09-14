@@ -21,6 +21,7 @@ import {
   type Style,
   type SpaceDetails,
 } from "@/lib/constants";
+import type { SuggestedProduct } from "@/lib/providers";
 import {
   CATALOG_BY_ROOM,
   estimateCost,
@@ -61,6 +62,7 @@ export default function Home() {
   const [budgetScope, setBudgetScope] = useState<BudgetScope>("Furniture & décor");
   const [freeNote, setFreeNote] = useState("");
   const [resultImage, setResultImage] = useState<string | null>(null);
+  const [suggestedProducts, setSuggestedProducts] = useState<SuggestedProduct[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isRefining, setIsRefining] = useState(false);
   const [refineError, setRefineError] = useState<string | null>(null);
@@ -83,6 +85,7 @@ export default function Home() {
     setBudgetScope("Furniture & décor");
     setFreeNote("");
     setResultImage(null);
+    setSuggestedProducts([]);
     setError(null);
     setRefineError(null);
     setSelected({});
@@ -97,7 +100,12 @@ export default function Home() {
     setStep("purpose");
   }
 
-  async function callGenerate(note: string): Promise<{ ok: true; image: string } | { ok: false; error: string }> {
+  async function callGenerate(
+    note: string,
+  ): Promise<
+    | { ok: true; image: string; suggestedProducts: SuggestedProduct[] }
+    | { ok: false; error: string }
+  > {
     if (!imageDataUrl) return { ok: false, error: "No photo uploaded." };
     const [header, base64] = imageDataUrl.split(",");
     const mimeType = header.match(/data:(.*);base64/)?.[1] ?? "image/jpeg";
@@ -118,7 +126,11 @@ export default function Home() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Generation failed.");
-      return { ok: true, image: `data:${json.mimeType};base64,${json.image}` };
+      return {
+        ok: true,
+        image: `data:${json.mimeType};base64,${json.image}`,
+        suggestedProducts: Array.isArray(json.suggestedProducts) ? json.suggestedProducts : [],
+      };
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : "Generation failed." };
     }
@@ -130,6 +142,7 @@ export default function Home() {
     const result = await callGenerate(freeNote);
     if (result.ok) {
       setResultImage(result.image);
+      setSuggestedProducts(result.suggestedProducts);
       setStep("result");
     } else {
       setError(result.error);
@@ -145,6 +158,7 @@ export default function Home() {
     setIsRefining(false);
     if (result.ok) {
       setResultImage(result.image);
+      setSuggestedProducts(result.suggestedProducts);
     } else {
       setRefineError(result.error);
     }
@@ -276,6 +290,7 @@ export default function Home() {
         <ProductsStep
           roomType={roomType}
           selected={selected}
+          suggestedProducts={suggestedProducts}
           onToggle={handleToggleProduct}
           onBack={() => setStep("needs")}
           onContinue={handleGoToCost}

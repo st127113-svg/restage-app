@@ -100,27 +100,20 @@ export function UploadStep({
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <div className="flex items-center gap-3.5 rounded-lg bg-bg p-4">
-              <RoomIcon />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/example-room.png"
+                alt="Example of a well-lit, straight-on room photo"
+                className="h-11 w-16 shrink-0 rounded-md object-cover"
+              />
               <p className="text-sm text-ink-faint">
                 Works best with a well-lit, straight-on shot of the whole
-                room.
+                room, like the example shown.
               </p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function RoomIcon() {
-  return (
-    <svg width="56" height="40" viewBox="0 0 140 100" className="shrink-0 rounded-md">
-      <rect width="140" height="100" fill="var(--surface-2)" />
-      <polygon points="0,100 140,100 110,70 30,70" fill="oklch(0.9 0.012 75)" />
-      <rect x="30" y="18" width="80" height="52" fill="none" stroke="var(--ink-faint)" strokeWidth={1.5} />
-      <rect x="52" y="28" width="36" height="24" fill="none" stroke="var(--ink-faint)" strokeWidth={1.2} />
-      <line x1="70" y1="28" x2="70" y2="52" stroke="var(--ink-faint)" strokeWidth={1.2} />
-    </svg>
   );
 }

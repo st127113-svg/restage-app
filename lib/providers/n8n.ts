@@ -1,4 +1,4 @@
-import type { GenerateParams, GenerateResult, ImageProvider } from "./types";
+import type { GenerateParams, GenerateResult, ImageProvider, SuggestedProduct } from "./types";
 import { ProviderError } from "./types";
 
 /**
@@ -64,6 +64,24 @@ export const n8nProvider: ImageProvider = {
       );
     }
 
-    return { imageBase64, mimeType };
+    // The workflow's AI Agent matches identified furniture to real Lazada
+    // listings and returns them here. Defensive parsing since this comes
+    // straight from an LLM's JSON output inside the workflow -- never
+    // trust its shape blindly.
+    const rawProducts = Array.isArray(json?.suggestedProducts) ? json.suggestedProducts : [];
+    const suggestedProducts: SuggestedProduct[] = rawProducts
+      .filter((p: unknown): p is Record<string, unknown> => !!p && typeof p === "object")
+      .map((p: Record<string, unknown>) => ({
+        item: typeof p.item === "string" ? p.item : "Item",
+        matched: p.matched === true,
+        name: typeof p.name === "string" ? p.name : undefined,
+        price: typeof p.price === "number" ? p.price : undefined,
+        currency: typeof p.currency === "string" ? p.currency : undefined,
+        image: typeof p.image === "string" ? p.image : undefined,
+        productUrl: typeof p.productUrl === "string" ? p.productUrl : undefined,
+        reason: typeof p.reason === "string" ? p.reason : undefined,
+      }));
+
+    return { imageBase64, mimeType, suggestedProducts };
   },
 };
