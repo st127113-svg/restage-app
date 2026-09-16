@@ -17,6 +17,38 @@ import { primaryButton, textLink } from "./buttons";
 
 const CATEGORY_ORDER: NeedCategory[] = ["Furniture", "Materials", "Services"];
 
+// suggestedProducts come back as free text like "Round natural jute rug
+// (Textile)" -- pull the parenthesized hint out and fold it onto our
+// three-category shelf so real matches slot into the same layout the
+// mock catalog used.
+function inferCategory(item: string): NeedCategory {
+  const hint = item.match(/\(([^)]+)\)\s*$/)?.[1]?.toLowerCase() ?? "";
+  if (hint.includes("service") || hint.includes("labor") || hint.includes("install")) {
+    return "Services";
+  }
+  if (hint.includes("furniture")) return "Furniture";
+  return "Materials";
+}
+
+// Turn a real, matched product from the search tool into the same shape
+// the rest of this screen (and the budget-check step after it) already
+// knows how to render and total up.
+function toCatalogItem(product: SuggestedProduct, index: number): CatalogItem {
+  const price = product.price ?? 0;
+  return {
+    id: `matched-${index}`,
+    category: inferCategory(product.item),
+    name: product.name ?? product.item,
+    reason: product.reason ?? product.item,
+    supplier: "Shopee",
+    contact: product.productUrl ?? "shopee.co.th",
+    price,
+    // No real budget-tier price for an actual matched product yet, so
+    // there's nothing cheaper to swap it for -- keep it at full price.
+    budgetPrice: price,
+  };
+}
+
 export function ShoppingListStep({
   roomType,
   scope,
@@ -34,7 +66,11 @@ export function ShoppingListStep({
   onBack: () => void;
   onContinue: (selectedItems: CatalogItem[]) => void;
 }) {
-  const items = CATALOG_BY_ROOM[roomType];
+  const matchedProducts = suggestedProducts.filter((p) => p.matched);
+  const hasRealMatches = matchedProducts.length > 0;
+  const items = hasRealMatches
+    ? matchedProducts.map((p, i) => toCatalogItem(p, i))
+    : CATALOG_BY_ROOM[roomType];
   const selectedItems = items.filter((item) => selected[item.id] ?? true);
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
   const total = estimateCost(selectedItems, scope);
@@ -50,50 +86,6 @@ export function ShoppingListStep({
         </p>
       </div>
 
-      {suggestedProducts.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h2 className="font-display text-base font-bold text-ink">Matched on Lazada</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {suggestedProducts
-              .filter((p) => p.matched)
-              .map((p, i) => (
-                <a
-                  key={`${p.item}-${i}`}
-                  href={p.productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex gap-3 border-2 border-line bg-surface p-3 transition-colors hover:border-ink"
-                >
-                  {p.image && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.image} alt={p.name ?? p.item} className="h-20 w-20 shrink-0 object-cover" />
-                  )}
-                  <div className="flex flex-1 flex-col justify-between gap-1">
-                    <div>
-                      <div className="text-[12px] text-ink-faint">{p.item}</div>
-                      <div className="text-[14px] font-medium leading-snug text-ink">{p.name}</div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-display text-base tabular text-ink">
-                        {typeof p.price === "number" ? formatBaht(p.price) : "—"}
-                      </span>
-                      <span className="text-[12px] font-medium text-ink underline-offset-4 hover:underline">
-                        View on Lazada &rarr;
-                      </span>
-                    </div>
-                  </div>
-                </a>
-              ))}
-          </div>
-          {suggestedProducts.some((p) => !p.matched) && (
-            <p className="text-[12px] text-ink-faint">
-              No real product match found for:{" "}
-              {suggestedProducts.filter((p) => !p.matched).map((p) => p.item).join(", ")}.
-            </p>
-          )}
-        </div>
-      )}
-
       {CATEGORY_ORDER.map((category) => {
         const inCategory = items.filter((item) => item.category === category);
         if (inCategory.length === 0) return null;
@@ -102,13 +94,28 @@ export function ShoppingListStep({
             <h2 className="font-display text-base font-bold text-ink">{category}</h2>
             {inCategory.map((item) => {
               const checked = selected[item.id] ?? true;
+              const buyUrl = hasRealMatches ? item.contact : undefined;
               return (
                 <label key={item.id} className="cursor-pointer">
                   <ShelfItemRow
                     name={item.name}
                     meta={item.reason}
                     price={formatBaht(item.price)}
-                    priceNote={`${item.supplier} · ${item.contact}`}
+                    priceNote={
+                      buyUrl ? (
+                        <a
+                          href={buyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-medium text-ink underline-offset-4 hover:underline"
+                        >
+                          Buy on Shopee &rarr;
+                        </a>
+                      ) : (
+                        `${item.supplier} · ${item.contact}`
+                      )
+                    }
                     muted={!checked}
                     checkbox={
                       <input
@@ -125,6 +132,13 @@ export function ShoppingListStep({
           </div>
         );
       })}
+
+      {hasRealMatches && suggestedProducts.some((p) => !p.matched) && (
+        <p className="text-[12px] text-ink-faint">
+          Couldn&apos;t find a real product match for:{" "}
+          {suggestedProducts.filter((p) => !p.matched).map((p) => p.item).join(", ")}.
+        </p>
+      )}
 
       <div className="flex flex-col gap-2 border-2 border-ink bg-surface p-6">
         <div className="flex items-center justify-between text-[15px]">
