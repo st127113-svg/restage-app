@@ -1,25 +1,100 @@
-@import url("https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Work+Sans:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: oklch(0.97 0.012 75);
-  --surface: oklch(0.995 0.004 75);
-  --surface-2: oklch(0.94 0.014 75);
-  --ink: oklch(0.24 0.02 60);
-  --ink-soft: oklch(0.48 0.02 60);
-  --ink-faint: oklch(0.66 0.018 60);
-  --line: oklch(0.88 0.012 75);
-  --clay: oklch(0.62 0.13 40);
-  --clay-soft: oklch(0.92 0.028 40);
+  /* Warehouse ground -- daylight retail, never dark */
+  --bg: #f1f1ec;
+  --surface: #ffffff;
+  --surface-2: #e6e6df;
 
-  --font-display: "Newsreader", Georgia, serif;
-  --font-body: "Work Sans", system-ui, sans-serif;
+  --ink: #1e211c;
+  --ink-soft: #585c53;
+  --ink-faint: #666a5f;
+
+  --line: #d7d7cf;
+  --line-strong: #1e211c;
+
+  /* The one committed accent -- price and primary action only */
+  --yellow: #f5b400;
+  --yellow-ink: #1e211c;
+  --yellow-soft: #fcecbc;
+
+  /* Budget state -- never decorative elsewhere */
+  --green: #2f7a4d;
+  --green-soft: #e3efe5;
+  --red: #c1432d;
+  --red-soft: #f9e5e0;
+
+  --font-display: "Archivo", "Arial Black", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+
+  --shadow-tag: 0 2px 0 0 var(--line-strong);
+  --shadow-card: 0 14px 30px -18px rgb(30 33 28 / 0.28);
+}
+
+* {
+  border-color: var(--line);
+}
+
+html {
+  scrollbar-color: var(--ink-faint) var(--bg);
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--yellow-ink);
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-faint);
+  border: 3px solid var(--bg);
+  border-radius: 999px;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--ink);
+  outline-offset: 2px;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes reveal-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.reveal-wipe {
+  animation: reveal-wipe 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-wipe {
+    animation: none;
+  }
 }

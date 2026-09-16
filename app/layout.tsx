@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DwellWise Group3",
+  title: "DwellWise — AI room redesign, priced",
   description:
-    "Upload a photo of an empty or existing room, pick a room type and style, and get an AI-redecorated version back.",
+    "Upload a photo of a room, pick a room type and style, and get an AI-redecorated version back with a priced, shoppable, hireable plan.",
 };
 
 export default function RootLayout({

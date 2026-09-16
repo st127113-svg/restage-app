@@ -29,35 +29,30 @@ export function UploadStep({
   }
 
   return (
-    <div className="flex min-h-[900px] flex-col">
-      <nav className="flex items-center justify-between px-16 py-8">
-        <div className="font-display text-xl font-semibold">Restage</div>
-      </nav>
+    <div className="mx-auto flex max-w-[1180px] flex-1 flex-col items-center gap-16 px-8 py-14 sm:px-16 lg:flex-row lg:items-center lg:py-20">
+      <div className="flex max-w-[480px] flex-1 flex-col gap-6">
+        <h1 className="font-display text-[44px] font-black leading-[1.05] text-ink">
+          Upload a room.
+          <br />
+          Walk out priced.
+        </h1>
+        <p className="max-w-[42ch] text-lg leading-relaxed text-ink-soft">
+          DwellWise renders a redecorated version of your space, then prices
+          every piece of it — real suppliers, one plan you can actually buy.
+        </p>
+        <p className="text-sm text-ink-faint">No design experience needed — just a photo.</p>
+      </div>
 
-      <div className="flex flex-1 items-center gap-20 px-16 pb-16">
-        <div className="flex max-w-[520px] flex-1 flex-col gap-7">
-          <div className="flex items-center gap-2.5">
-            <div className="h-2 w-2 rounded-full bg-clay" />
-            <span className="text-xs uppercase tracking-wider text-ink-soft">
-              Room redesign, in one upload
+      <div className="w-full max-w-[540px] flex-1">
+        <div className="border-2 border-ink bg-surface">
+          <div className="flex items-center justify-between border-b-2 border-ink bg-ink px-5 py-2.5">
+            <span className="font-display text-xs font-black uppercase tracking-wide text-bg">
+              Drop-off counter
             </span>
+            <span className="text-xs uppercase tracking-wide text-bg/70">Aisle 01</span>
           </div>
-          <h1 className="font-display text-5xl leading-[1.08] text-ink">
-            See your room,
-            <br />
-            reimagined.
-          </h1>
-          <p className="max-w-[440px] text-lg leading-relaxed text-ink-soft">
-            Upload a photo of any room, pick a style, and Restage renders a
-            fully decorated version of the same space in under a minute.
-          </p>
-          <p className="text-sm text-ink-faint">
-            No design experience needed — just a photo.
-          </p>
-        </div>
 
-        <div className="max-w-[560px] flex-1">
-          <div className="flex flex-col gap-6 rounded-2xl border border-line bg-surface p-10">
+          <div className="flex flex-col gap-5 p-7">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
@@ -72,17 +67,17 @@ export function UploadStep({
                 handleFile(e.dataTransfer.files?.[0]);
               }}
               className={
-                "flex flex-col items-center gap-4 rounded-xl border-[1.5px] border-dashed bg-bg p-10 text-center transition-colors " +
-                (dragging ? "border-clay" : "border-line")
+                "flex flex-col items-center gap-4 border-[1.5px] border-dashed p-10 text-center transition-colors " +
+                (dragging ? "border-ink bg-yellow-soft" : "border-line bg-bg")
               }
             >
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--clay)" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 18a4 4 0 0 1-1-7.87V10a5 5 0 0 1 9.8-1.4A4.5 4.5 0 0 1 17.5 17H17" />
                 <path d="M12 12v8" />
                 <path d="M9.5 14.5 12 12l2.5 2.5" />
               </svg>
               <div>
-                <div className="text-base font-medium">Drag a photo here</div>
+                <div className="font-display text-base font-bold text-ink">Drop a photo here</div>
                 <div className="mt-1 text-sm text-ink-faint">
                   or click to browse · JPG or PNG, up to{" "}
                   {MAX_UPLOAD_BYTES / (1024 * 1024)}MB
@@ -97,14 +92,24 @@ export function UploadStep({
               onChange={(e) => handleFile(e.target.files?.[0])}
             />
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="relative inline-flex w-fit items-center gap-2 self-start bg-yellow py-3 pl-8 pr-6 font-display text-sm font-bold uppercase tracking-wide text-yellow-ink shadow-tag transition-all hover:brightness-95 active:translate-y-[2px] active:shadow-none"
+              style={{ clipPath: "polygon(14% 0, 100% 0, 100% 100%, 14% 100%, 0 50%)" }}
+            >
+              <span className="absolute left-[9px] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-bg" />
+              Choose a photo
+            </button>
 
-            <div className="flex items-center gap-3.5 rounded-lg bg-bg p-4">
+            {error && <p className="text-sm text-red">{error}</p>}
+
+            <div className="flex items-center gap-3.5 border border-line bg-bg p-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/example-room.png"
                 alt="Example of a well-lit, straight-on room photo"
-                className="h-11 w-16 shrink-0 rounded-md object-cover"
+                className="h-11 w-16 shrink-0 object-cover"
               />
               <p className="text-sm text-ink-faint">
                 Works best with a well-lit, straight-on shot of the whole

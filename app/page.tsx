@@ -1,19 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { AisleHeader } from "@/components/AisleHeader";
 import { UploadStep } from "@/components/UploadStep";
-import { PurposeStep } from "@/components/PurposeStep";
-import { SpaceStep } from "@/components/SpaceStep";
-import { StyleStep } from "@/components/StyleStep";
-import { BudgetStep } from "@/components/BudgetStep";
-import { FreePromptStep } from "@/components/FreePromptStep";
+import { RoomDetailsStep } from "@/components/RoomDetailsStep";
+import { DesignBriefStep } from "@/components/DesignBriefStep";
 import { GeneratingStep } from "@/components/GeneratingStep";
 import { ResultStep } from "@/components/ResultStep";
-import { NeedsStep } from "@/components/NeedsStep";
-import { ProductsStep } from "@/components/ProductsStep";
-import { CostStep } from "@/components/CostStep";
+import { ShoppingListStep } from "@/components/ShoppingListStep";
 import { BudgetCheckStep } from "@/components/BudgetCheckStep";
-import { AdjustStep } from "@/components/AdjustStep";
 import { PlanStep } from "@/components/PlanStep";
 import {
   EMPTY_SPACE_DETAILS,
@@ -31,21 +26,30 @@ import {
   type AdjustmentResult,
 } from "@/lib/planning";
 
+// The 15-stage journey from the customer journey map still drives every
+// state transition below; these eight screens just group stages that
+// share one department (see components/AisleHeader.tsx) onto one page
+// instead of one page per stage.
 type Step =
-  | "upload"
-  | "purpose"
-  | "space"
-  | "style"
-  | "budget"
-  | "prompt"
-  | "generating"
-  | "result"
-  | "needs"
-  | "products"
-  | "cost"
-  | "budgetCheck"
-  | "adjust"
-  | "plan";
+  | "upload" // 1-2
+  | "roomDetails" // 3-4
+  | "designBrief" // 5-7
+  | "generating" // 8
+  | "result" // 8-9
+  | "shopping" // 10-12
+  | "budgetCheck" // 13-14
+  | "plan"; // 15
+
+const SCREEN: Record<Step, { department: number; title: string; stages: string; quiet?: boolean }> = {
+  upload: { department: 1, title: "Upload", stages: "1–2" },
+  roomDetails: { department: 1, title: "Room details", stages: "3–4" },
+  designBrief: { department: 2, title: "Design brief", stages: "5–7", quiet: true },
+  generating: { department: 2, title: "Generating", stages: "8", quiet: true },
+  result: { department: 2, title: "Result", stages: "8–9", quiet: true },
+  shopping: { department: 3, title: "Shopping list", stages: "10–12" },
+  budgetCheck: { department: 4, title: "Budget check", stages: "13–14" },
+  plan: { department: 5, title: "Implementation plan", stages: "15" },
+};
 
 export default function Home() {
   const [step, setStep] = useState<Step>("upload");
@@ -98,7 +102,7 @@ export default function Home() {
   function handleUpload(dataUrl: string, name: string) {
     setImageDataUrl(dataUrl);
     setFileName(name);
-    setStep("purpose");
+    setStep("roomDetails");
   }
 
   // Calls the n8n webhook directly from the browser instead of proxying
@@ -221,7 +225,7 @@ export default function Home() {
       setStep("result");
     } else {
       setError(result.error);
-      setStep("prompt");
+      setStep("designBrief");
     }
   }
 
@@ -243,26 +247,20 @@ export default function Home() {
     const initialSelected: Record<string, boolean> = {};
     for (const item of CATALOG_BY_ROOM[roomType]) initialSelected[item.id] = true;
     setSelected(initialSelected);
-    setStep("needs");
+    setStep("shopping");
   }
 
   function handleToggleProduct(id: string) {
     setSelected((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
   }
 
-  function handleGoToCost() {
-    const items = CATALOG_BY_ROOM[roomType].filter((item) => selected[item.id] ?? true);
+  function handleGoToBudgetCheck(items: CatalogItem[]) {
     setSelectedItems(items);
-    setStep("cost");
+    setStep("budgetCheck");
   }
 
   function handleAcceptAdjustment(result: AdjustmentResult) {
     setPlanItems(result.items);
-    setStep("plan");
-  }
-
-  function handleKeepOriginal() {
-    setPlanItems(selectedItems);
     setStep("plan");
   }
 
@@ -271,147 +269,108 @@ export default function Home() {
     setStep("plan");
   }
 
+  const screen = SCREEN[step];
+
   return (
-    <main className="mx-auto max-w-[1440px]">
-      {step === "upload" && <UploadStep onUpload={handleUpload} />}
+    <main className="flex min-h-screen flex-col">
+      <AisleHeader
+        department={screen.department}
+        title={screen.title}
+        stages={screen.stages}
+        quiet={screen.quiet}
+      />
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col">
+        {step === "upload" && <UploadStep onUpload={handleUpload} />}
 
-      {step === "purpose" && imageDataUrl && (
-        <PurposeStep
-          imageDataUrl={imageDataUrl}
-          fileName={fileName}
-          roomType={roomType}
-          purpose={purpose}
-          onChangeRoomType={setRoomType}
-          onChangePurpose={setPurpose}
-          onChangePhoto={() => setStep("upload")}
-          onBack={() => setStep("upload")}
-          onContinue={() => setStep("space")}
-        />
-      )}
+        {step === "roomDetails" && imageDataUrl && (
+          <RoomDetailsStep
+            imageDataUrl={imageDataUrl}
+            fileName={fileName}
+            roomType={roomType}
+            purpose={purpose}
+            space={space}
+            onChangeRoomType={setRoomType}
+            onChangePurpose={setPurpose}
+            onChangeSpace={setSpace}
+            onChangePhoto={() => setStep("upload")}
+            onBack={() => setStep("upload")}
+            onContinue={() => setStep("designBrief")}
+          />
+        )}
 
-      {step === "space" && imageDataUrl && (
-        <SpaceStep
-          imageDataUrl={imageDataUrl}
-          fileName={fileName}
-          space={space}
-          onChangeSpace={setSpace}
-          onChangePhoto={() => setStep("upload")}
-          onBack={() => setStep("purpose")}
-          onContinue={() => setStep("style")}
-        />
-      )}
+        {step === "designBrief" && imageDataUrl && (
+          <DesignBriefStep
+            imageDataUrl={imageDataUrl}
+            fileName={fileName}
+            style={style}
+            onChangeStyle={setStyle}
+            amount={budgetAmount}
+            scope={budgetScope}
+            onChangeAmount={setBudgetAmount}
+            onChangeScope={setBudgetScope}
+            freeNote={freeNote}
+            onChangeFreeNote={setFreeNote}
+            onChangePhoto={() => setStep("upload")}
+            onBack={() => setStep("roomDetails")}
+            onGenerate={handleGenerate}
+            error={error}
+          />
+        )}
 
-      {step === "style" && imageDataUrl && (
-        <StyleStep
-          imageDataUrl={imageDataUrl}
-          fileName={fileName}
-          style={style}
-          onChangeStyle={setStyle}
-          onChangePhoto={() => setStep("upload")}
-          onBack={() => setStep("space")}
-          onContinue={() => setStep("budget")}
-        />
-      )}
+        {step === "generating" && (
+          <GeneratingStep roomType={roomType} style={style} onCancel={() => setStep("designBrief")} />
+        )}
 
-      {step === "budget" && imageDataUrl && (
-        <BudgetStep
-          imageDataUrl={imageDataUrl}
-          fileName={fileName}
-          amount={budgetAmount}
-          scope={budgetScope}
-          onChangeAmount={setBudgetAmount}
-          onChangeScope={setBudgetScope}
-          onChangePhoto={() => setStep("upload")}
-          onBack={() => setStep("style")}
-          onContinue={() => setStep("prompt")}
-        />
-      )}
+        {step === "result" && imageDataUrl && resultImage && (
+          <ResultStep
+            beforeImage={imageDataUrl}
+            afterImage={resultImage}
+            roomType={roomType}
+            style={style}
+            isRefining={isRefining}
+            refineError={refineError}
+            onRefine={handleRefine}
+            onTryAnotherStyle={() => setStep("designBrief")}
+            onStartOver={resetAll}
+            onContinue={handleEnterPlanning}
+          />
+        )}
 
-      {step === "prompt" && imageDataUrl && (
-        <FreePromptStep
-          imageDataUrl={imageDataUrl}
-          fileName={fileName}
-          freeNote={freeNote}
-          onChangeFreeNote={setFreeNote}
-          onChangePhoto={() => setStep("upload")}
-          onBack={() => setStep("budget")}
-          onGenerate={handleGenerate}
-          error={error}
-        />
-      )}
+        {step === "shopping" && (
+          <ShoppingListStep
+            roomType={roomType}
+            scope={budgetScope}
+            selected={selected}
+            suggestedProducts={suggestedProducts}
+            onToggle={handleToggleProduct}
+            onBack={() => setStep("result")}
+            onContinue={handleGoToBudgetCheck}
+          />
+        )}
 
-      {step === "generating" && <GeneratingStep roomType={roomType} style={style} onCancel={() => setStep("prompt")} />}
+        {step === "budgetCheck" && (
+          <BudgetCheckStep
+            items={selectedItems}
+            scope={budgetScope}
+            total={estimateCost(selectedItems, budgetScope)}
+            budget={budget}
+            onBack={() => setStep("shopping")}
+            onAccept={handleAcceptAdjustment}
+            onContinue={handleFinishBudgetCheck}
+          />
+        )}
 
-      {step === "result" && imageDataUrl && resultImage && (
-        <ResultStep
-          beforeImage={imageDataUrl}
-          afterImage={resultImage}
-          roomType={roomType}
-          style={style}
-          isRefining={isRefining}
-          refineError={refineError}
-          onRefine={handleRefine}
-          onTryAnotherStyle={() => setStep("style")}
-          onStartOver={resetAll}
-          onContinue={handleEnterPlanning}
-        />
-      )}
-
-      {step === "needs" && (
-        <NeedsStep roomType={roomType} onBack={() => setStep("result")} onContinue={() => setStep("products")} />
-      )}
-
-      {step === "products" && (
-        <ProductsStep
-          roomType={roomType}
-          selected={selected}
-          suggestedProducts={suggestedProducts}
-          onToggle={handleToggleProduct}
-          onBack={() => setStep("needs")}
-          onContinue={handleGoToCost}
-        />
-      )}
-
-      {step === "cost" && (
-        <CostStep
-          items={selectedItems}
-          scope={budgetScope}
-          onBack={() => setStep("products")}
-          onContinue={() => setStep("budgetCheck")}
-        />
-      )}
-
-      {step === "budgetCheck" && (
-        <BudgetCheckStep
-          total={estimateCost(selectedItems, budgetScope)}
-          budget={budget}
-          onBack={() => setStep("cost")}
-          onAdjust={() => setStep("adjust")}
-          onContinue={handleFinishBudgetCheck}
-        />
-      )}
-
-      {step === "adjust" && (
-        <AdjustStep
-          items={selectedItems}
-          scope={budgetScope}
-          budget={budget}
-          onBack={() => setStep("budgetCheck")}
-          onAccept={handleAcceptAdjustment}
-          onKeepOriginal={handleKeepOriginal}
-        />
-      )}
-
-      {step === "plan" && (
-        <PlanStep
-          roomType={roomType}
-          style={style}
-          scope={budgetScope}
-          items={planItems}
-          total={estimateCost(planItems, budgetScope)}
-          onStartOver={resetAll}
-        />
-      )}
+        {step === "plan" && (
+          <PlanStep
+            roomType={roomType}
+            style={style}
+            scope={budgetScope}
+            items={planItems}
+            total={estimateCost(planItems, budgetScope)}
+            onStartOver={resetAll}
+          />
+        )}
+      </div>
     </main>
   );
 }

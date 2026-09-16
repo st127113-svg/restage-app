@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T00:00:00Z",
+  "title": "Design System: DwellWise",
+  "extensions": {
+    "colorMeta": {
+      "yellow": { "role": "primary", "displayName": "Signage Yellow", "canonical": "#f5b400", "tonalRamp": ["#4a3600", "#6e5100", "#966e00", "#c08e00", "#f5b400", "#f9c840", "#fcdb80", "#fcecbc"] },
+      "bg": { "role": "neutral", "displayName": "Warehouse Ground", "canonical": "#f1f1ec", "tonalRamp": ["#1e211c", "#3a3d36", "#5a5d54", "#7c7f75", "#b3b3ab", "#d7d7cf", "#e6e6df", "#f1f1ec"] },
+      "surface": { "role": "neutral", "displayName": "Surface White", "canonical": "#ffffff", "tonalRamp": ["#1e211c", "#3a3d36", "#5a5d54", "#7c7f75", "#b3b3ab", "#d7d7cf", "#e6e6df", "#ffffff"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#1e211c", "tonalRamp": ["#000000", "#1e211c", "#2f322c", "#434640", "#585c53", "#666a5f", "#8b8f83", "#c9ccc3"] },
+      "green": { "role": "state", "displayName": "Budget Green", "canonical": "#2f7a4d", "tonalRamp": ["#0f2c1c", "#173f28", "#205334", "#286640", "#2f7a4d", "#5b9974", "#98c2ab", "#e3efe5"] },
+      "red": { "role": "state", "displayName": "Budget Red", "canonical": "#c1432d", "tonalRamp": ["#3d150e", "#5c1f14", "#7c2a1b", "#9c3622", "#c1432d", "#d06e5c", "#e2a498", "#f9e5e0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Aisle Display (Archivo Black)", "purpose": "Aisle numbers, department headers, price numerals, button labels. Signage-register text only." },
+      "body": { "displayName": "Shopper Body (IBM Plex Sans)", "purpose": "Item names, descriptions, form copy — everything read at length." }
+    },
+    "shadows": [
+      { "name": "shadow-tag", "value": "0 2px 0 0 var(--line-strong)", "purpose": "Hard flat offset under the primary button and price tags; disappears with a 2px translate on :active to simulate a tactile press into the signage board." },
+      { "name": "shadow-card", "value": "0 14px 30px -18px rgb(30 33 28 / 0.28)", "purpose": "Soft ambient lift, used once for the GeneratingStep card only." }
+    ],
+    "motion": [
+      { "name": "reveal-wipe", "value": "clip-path inset(0 100% 0 0) -> inset(0 0 0 0), 0.9s cubic-bezier(0.16, 1, 0.3, 1), respects prefers-reduced-motion", "purpose": "Left-to-right wipe reveal for the generated redesign image in ResultStep — the one animated entrance in the system." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single forward action a screen owns. Yellow, tactile press on active.",
+      "html": "<button class=\"ds-btn-primary\">CONTINUE</button>",
+      "css": ".ds-btn-primary { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px; border: 2px solid #1e211c; background: #f5b400; padding: 12px 28px; font-family: 'Archivo', 'Arial Black', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: #1e211c; box-shadow: 0 2px 0 0 #1e211c; transition: all 0.15s; } .ds-btn-primary:hover { filter: brightness(0.95); } .ds-btn-primary:active { transform: translateY(2px); box-shadow: none; } .ds-btn-primary:focus-visible { outline: 2.5px solid #1e211c; outline-offset: 2px; } .ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.4; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Any forward-neutral action that isn't a plain text link.",
+      "html": "<button class=\"ds-btn-secondary\">BACK</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px; border: 2px solid #1e211c; background: #ffffff; padding: 12px 28px; font-family: 'Archivo', 'Arial Black', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: #1e211c; transition: background-color 0.15s; } .ds-btn-secondary:hover { background: #e6e6df; } .ds-btn-secondary:active { transform: translateY(1px); } .ds-btn-secondary:focus-visible { outline: 2.5px solid #1e211c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Price Tag",
+      "kind": "custom",
+      "refersTo": "price-tag",
+      "description": "Die-cut yellow tag for hero amounts: budget entry, running totals, final price. Not used for ordinary line-item prices.",
+      "html": "<span class=\"ds-price-tag\">฿24,500</span>",
+      "css": ".ds-price-tag { position: relative; display: inline-flex; align-items: center; font-family: 'Archivo', 'Arial Black', sans-serif; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; background: #f5b400; color: #1e211c; padding: 10px 20px 10px 30px; font-size: 18px; clip-path: polygon(14% 0, 100% 0, 100% 100%, 14% 100%, 0 50%); } .ds-price-tag::before { content: ''; position: absolute; top: 50%; left: 9px; width: 6px; height: 6px; border-radius: 999px; background: #f1f1ec; transform: translateY(-50%); }"
+    },
+    {
+      "name": "Shelf Item Row",
+      "kind": "custom",
+      "refersTo": "shelf-item-row",
+      "description": "SKU shelf-tag row with a barcode-strip left edge. Used wherever the plan lists a real, priced thing.",
+      "html": "<div class=\"ds-shelf-row\"><div class=\"ds-shelf-row-barcode\"></div><div class=\"ds-shelf-row-body\"><div class=\"ds-shelf-row-name\">Oak Side Table</div><div class=\"ds-shelf-row-price\">฿1,290</div></div></div>",
+      "css": ".ds-shelf-row { display: flex; align-items: stretch; gap: 16px; border: 1px solid #d7d7cf; background: #ffffff; padding-right: 20px; } .ds-shelf-row-barcode { width: 8px; flex-shrink: 0; background-image: repeating-linear-gradient(90deg, #1e211c 0 2px, transparent 2px 3px, #1e211c 3px 4px, transparent 4px 6px, #1e211c 6px 9px, transparent 9px 11px, #1e211c 11px 12px, transparent 12px 15px); } .ds-shelf-row-body { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 14px 0; } .ds-shelf-row-name { font-size: 15px; font-weight: 500; color: #1e211c; } .ds-shelf-row-price { font-family: 'Archivo', 'Arial Black', sans-serif; font-size: 16px; font-variant-numeric: tabular-nums; color: #1e211c; }"
+    },
+    {
+      "name": "Aisle Header (full)",
+      "kind": "nav",
+      "refersTo": "aisle-header",
+      "description": "The shared department-directory header: wordmark, five-department progress nav, aisle number/title/stage sub-bar.",
+      "html": "<header class=\"ds-aisle-header\"><div class=\"ds-aisle-header-top\"><span class=\"ds-aisle-wordmark\">DwellWise</span><nav class=\"ds-aisle-nav\"><div class=\"ds-aisle-dept ds-aisle-dept--current\">01<span>Discover</span></div><div class=\"ds-aisle-dept ds-aisle-dept--done\">02<span>Design</span></div></nav></div><div class=\"ds-aisle-sub\"><span>Aisle 01</span><span>Upload a photo</span><span class=\"ds-aisle-sub-stage\">Stage 1 of 15 &middot; Discover</span></div></header>",
+      "css": ".ds-aisle-header { border-bottom: 2px solid #1e211c; background: #f1f1ec; } .ds-aisle-header-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 64px; } .ds-aisle-wordmark { font-family: 'Archivo', 'Arial Black', sans-serif; font-weight: 900; font-size: 18px; text-transform: uppercase; color: #1e211c; } .ds-aisle-nav { display: flex; gap: 1px; } .ds-aisle-dept { display: flex; flex-direction: column; align-items: center; padding: 6px 14px; border-bottom: 3px solid transparent; font-size: 10px; text-transform: uppercase; color: #666a5f; } .ds-aisle-dept--current { background: #1e211c; color: #f1f1ec; border-color: #f5b400; } .ds-aisle-dept--done { color: #1e211c; border-color: #1e211c; } .ds-aisle-sub { display: flex; align-items: center; gap: 12px; padding: 0 64px 12px; font-size: 12px; text-transform: uppercase; color: #585c53; }"
+    },
+    {
+      "name": "Aisle Header (quiet)",
+      "kind": "nav",
+      "refersTo": "aisle-header-quiet",
+      "description": "Collapsed wordmark-only header used for the Design department's three reveal screens, so the generated image reads as the reward, not the signage chrome.",
+      "html": "<header class=\"ds-aisle-header-quiet\"><span class=\"ds-aisle-wordmark\">DwellWise</span><span class=\"ds-aisle-quiet-label\">Design &middot; Result</span></header>",
+      "css": ".ds-aisle-header-quiet { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d7d7cf; background: #f1f1ec; padding: 16px 64px; } .ds-aisle-quiet-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: #666a5f; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Aisle Signage",
+    "overview": "DwellWise reads as a walk down a hardware-superstore aisle — HomePro, ThaiWatsadu signage vocabulary — rather than another glossy before/after AI-photo hero. Every phase of the journey is a numbered department; every priced thing gets a die-cut tag. The system is restrained and daylight-lit: it never goes dark, never goes decorative, and spends its one committed color, safety yellow, only where money or the next action lives.\n\nThe one confirmed exception is deliberate: the Design phase (style pick, generated image, before/after result) drops the shelf-tag scaffolding to a quiet wordmark-only header so the generated redesign — the emotional peak of the product — isn't buried under signage chrome. This is a named, built pattern (AisleHeader's quiet variant), not drift.",
+    "keyCharacteristics": [
+      "Daylight retail, never dark: warm off-white ground, no dark-mode surface.",
+      "Palette-as-law: yellow (#f5b400) appears only on price and primary action.",
+      "Die-cut price tags and barcode-strip shelf rows are the signature units.",
+      "2px ink borders, flat corners (no radius) everywhere except round dots/scrollbar.",
+      "The aisle-directory header recedes to a quiet bar during the Design department's reveal moments."
+    ],
+    "rules": [
+      { "name": "The Palette-as-Law Rule", "body": "Yellow spends itself on price and primary action only. If a new element wants yellow for emphasis or decoration, it doesn't get it — use ink, a border, or weight instead.", "section": "colors" },
+      { "name": "The Budget-State Rule", "body": "Green and red exist solely to carry the budget-check verdict. They do not double as general-purpose success/error colors elsewhere in the product.", "section": "colors" },
+      { "name": "The Signage-Face Rule", "body": "Archivo Black is reserved for things the world would actually print on a sign or a tag — numbers, department names, CTAs. Body copy never uses it.", "section": "typography" },
+      { "name": "The Flat-by-Default Rule", "body": "Borders carry separation everywhere; shadow is reserved for the tactile-press interaction (shadow-tag) and the single ambient-lift moment (shadow-card).", "section": "elevation" }
+    ],
+    "dos": [
+      "Do reserve yellow (#f5b400) for price and primary action only — the Palette-as-Law Rule.",
+      "Do use 2px ink borders and square corners as the default separation and shape language; reach for shadow-tag's hard offset only on tactile, price-bearing controls (buttons, tags).",
+      "Do keep the Design department's three reveal screens on the quiet AisleHeader variant so the generated image stays the visual peak.",
+      "Do set aisle numbers, department names, and price numerals in Archivo Black, uppercase; keep body copy in IBM Plex Sans."
+    ],
+    "donts": [
+      "Don't add rounded corners; the system has none except circular dots/holes and the die-cut clip-path notch.",
+      "Don't spend green/red outside the budget-check verdict — they are not general success/error colors.",
+      "Don't add a new box-shadow for ordinary card elevation; borders carry depth, and the two existing shadow tokens are each scoped to one specific moment (tactile press, single ambient lift).",
+      "Don't apply the display face (Archivo Black) to body prose — it's reserved for signage-register text (numbers, labels, CTAs)."
+    ]
+  }
+}

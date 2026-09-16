@@ -1,4 +1,4 @@
-# Restage — AI room redesign prototype
+# DwellWise — AI room redesign prototype
 
 Upload a photo of a room and walk the full customer journey behind this
 project — Discover → Design → Plan → Optimize → Implement — ending with
@@ -133,7 +133,7 @@ Env vars:
 
 ```
 IMAGE_PROVIDER=n8n
-N8N_WEBHOOK_URL=https://your-instance.app.n8n.cloud/webhook/restage-generate
+N8N_WEBHOOK_URL=https://your-instance.app.n8n.cloud/webhook/dwellwise-generate
 ```
 
 See the n8n workflow to build for this in the setup notes shared
