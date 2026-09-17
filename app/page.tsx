@@ -7,8 +7,6 @@ import { RoomDetailsStep } from "@/components/RoomDetailsStep";
 import { DesignBriefStep } from "@/components/DesignBriefStep";
 import { GeneratingStep } from "@/components/GeneratingStep";
 import { ResultStep } from "@/components/ResultStep";
-import { ShoppingListStep } from "@/components/ShoppingListStep";
-import { BudgetCheckStep } from "@/components/BudgetCheckStep";
 import { PlanStep } from "@/components/PlanStep";
 import {
   EMPTY_SPACE_DETAILS,
@@ -18,27 +16,15 @@ import {
 } from "@/lib/constants";
 import type { SuggestedProduct } from "@/lib/providers";
 import { buildPrompt } from "@/lib/prompt";
-import {
-  CATALOG_BY_ROOM,
-  estimateCost,
-  type BudgetScope,
-  type CatalogItem,
-  type AdjustmentResult,
-} from "@/lib/planning";
+import { estimateCost, type BudgetScope, type CatalogItem } from "@/lib/planning";
 
-// The 15-stage journey from the customer journey map still drives every
-// state transition below; these eight screens just group stages that
-// share one department (see components/AisleHeader.tsx) onto one page
-// instead of one page per stage.
 type Step =
-  | "upload" // 1-2
-  | "roomDetails" // 3-4
-  | "designBrief" // 5-7
-  | "generating" // 8
-  | "result" // 8-9
-  | "shopping" // 10-12
-  | "budgetCheck" // 13-14
-  | "plan"; // 15
+  | "upload"
+  | "roomDetails"
+  | "designBrief"
+  | "generating"
+  | "result"
+  | "plan";
 
 const SCREEN: Record<Step, { department: number; title: string; stages: string; quiet?: boolean }> = {
   upload: { department: 1, title: "Upload", stages: "1–2" },
@@ -46,22 +32,18 @@ const SCREEN: Record<Step, { department: number; title: string; stages: string; 
   designBrief: { department: 2, title: "Design brief", stages: "5–7", quiet: true },
   generating: { department: 2, title: "Generating", stages: "8", quiet: true },
   result: { department: 2, title: "Result", stages: "8–9", quiet: true },
-  shopping: { department: 3, title: "Shopping list", stages: "10–12" },
-  budgetCheck: { department: 4, title: "Budget check", stages: "13–14" },
   plan: { department: 5, title: "Implementation plan", stages: "15" },
 };
 
 export default function Home() {
   const [step, setStep] = useState<Step>("upload");
 
-  // Discover
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [roomType, setRoomType] = useState<RoomType>("Kitchen");
   const [purpose, setPurpose] = useState("");
   const [space, setSpace] = useState<SpaceDetails>(EMPTY_SPACE_DETAILS);
 
-  // Design
   const [style, setStyle] = useState<Style>("Scandinavian");
   const [budgetAmount, setBudgetAmount] = useState("");
   const [budgetScope, setBudgetScope] = useState<BudgetScope>("Furniture & décor");
@@ -72,9 +54,6 @@ export default function Home() {
   const [isRefining, setIsRefining] = useState(false);
   const [refineError, setRefineError] = useState<string | null>(null);
 
-  // Plan
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const [selectedItems, setSelectedItems] = useState<CatalogItem[]>([]);
   const [planItems, setPlanItems] = useState<CatalogItem[]>([]);
 
   const budget = Number(budgetAmount) || 0;
@@ -93,8 +72,6 @@ export default function Home() {
     setSuggestedProducts([]);
     setError(null);
     setRefineError(null);
-    setSelected({});
-    setSelectedItems([]);
     setPlanItems([]);
     setStep("upload");
   }
@@ -105,15 +82,6 @@ export default function Home() {
     setStep("roomDetails");
   }
 
-  // Calls the n8n webhook directly from the browser instead of proxying
-  // through /api/generate. The full round trip (Gemini image gen +
-  // furniture ID + the AI Agent matching against Lazada) can take well
-  // over a minute, which blew past Vercel's serverless function time
-  // limit and came back as Vercel's own HTML error page instead of
-  // JSON. The browser has no such limit, so calling n8n directly avoids
-  // that entirely. Requires NEXT_PUBLIC_N8N_WEBHOOK_URL to be set (it's
-  // exposed to the client on purpose -- it only triggers the workflow,
-  // your Lazada credentials stay inside n8n and are never sent back).
   async function callGenerate(
     note: string,
   ): Promise<
@@ -121,6 +89,7 @@ export default function Home() {
     | { ok: false; error: string }
   > {
     if (!imageDataUrl) return { ok: false, error: "No photo uploaded." };
+
     const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     if (!webhookUrl) {
       return {
@@ -129,6 +98,7 @@ export default function Home() {
           "NEXT_PUBLIC_N8N_WEBHOOK_URL is not set. Add it in Vercel's Environment Variables (and .env.local for local dev), then redeploy.",
       };
     }
+
     const [header, base64] = imageDataUrl.split(",");
     const mimeType = header.match(/data:(.*);base64/)?.[1] ?? "image/jpeg";
     const prompt = buildPrompt(roomType, style, { purpose, space, freeNote: note });
@@ -159,10 +129,6 @@ export default function Home() {
       };
     }
 
-    // Read as text first -- if n8n errored out (inactive workflow, a
-    // node crash, CORS block surfaced as an opaque failure, etc.) the
-    // body is often plain text or an HTML error page, not JSON, and
-    // res.json() would throw an unhelpful "Unexpected token" error.
     const rawText = await res.text();
     let json: Record<string, unknown> | null = null;
     try {
@@ -192,8 +158,8 @@ export default function Home() {
           'n8n did not return an "imageBase64" field. Check the workflow\'s Respond to Webhook node.',
       };
     }
-    const resultMimeType = typeof json?.mimeType === "string" ? json.mimeType : "image/png";
 
+    const resultMimeType = typeof json?.mimeType === "string" ? json.mimeType : "image/png";
     const rawProducts = Array.isArray(json?.suggestedProducts) ? json.suggestedProducts : [];
     const suggestedProducts: SuggestedProduct[] = rawProducts
       .filter((p: unknown): p is Record<string, unknown> => !!p && typeof p === "object")
@@ -241,32 +207,6 @@ export default function Home() {
     } else {
       setRefineError(result.error);
     }
-  }
-
-  function handleEnterPlanning() {
-    const initialSelected: Record<string, boolean> = {};
-    for (const item of CATALOG_BY_ROOM[roomType]) initialSelected[item.id] = true;
-    setSelected(initialSelected);
-    setStep("shopping");
-  }
-
-  function handleToggleProduct(id: string) {
-    setSelected((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
-  }
-
-  function handleGoToBudgetCheck(items: CatalogItem[]) {
-    setSelectedItems(items);
-    setStep("budgetCheck");
-  }
-
-  function handleAcceptAdjustment(result: AdjustmentResult) {
-    setPlanItems(result.items);
-    setStep("plan");
-  }
-
-  function handleFinishBudgetCheck() {
-    setPlanItems(selectedItems);
-    setStep("plan");
   }
 
   const screen = SCREEN[step];
@@ -328,36 +268,18 @@ export default function Home() {
             afterImage={resultImage}
             roomType={roomType}
             style={style}
+            budget={budget}
+            budgetScope={budgetScope}
+            suggestedProducts={suggestedProducts}
             isRefining={isRefining}
             refineError={refineError}
             onRefine={handleRefine}
             onTryAnotherStyle={() => setStep("designBrief")}
             onStartOver={resetAll}
-            onContinue={handleEnterPlanning}
-          />
-        )}
-
-        {step === "shopping" && (
-          <ShoppingListStep
-            roomType={roomType}
-            scope={budgetScope}
-            selected={selected}
-            suggestedProducts={suggestedProducts}
-            onToggle={handleToggleProduct}
-            onBack={() => setStep("result")}
-            onContinue={handleGoToBudgetCheck}
-          />
-        )}
-
-        {step === "budgetCheck" && (
-          <BudgetCheckStep
-            items={selectedItems}
-            scope={budgetScope}
-            total={estimateCost(selectedItems, budgetScope)}
-            budget={budget}
-            onBack={() => setStep("shopping")}
-            onAccept={handleAcceptAdjustment}
-            onContinue={handleFinishBudgetCheck}
+            onContinue={(items) => {
+              setPlanItems(items);
+              setStep("plan");
+            }}
           />
         )}
 
