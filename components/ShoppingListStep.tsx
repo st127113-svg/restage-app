@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { RoomType } from "@/lib/constants";
 import type { SuggestedProduct } from "@/lib/providers";
 import {
@@ -17,10 +18,6 @@ import { primaryButton, textLink } from "./buttons";
 
 const CATEGORY_ORDER: NeedCategory[] = ["Furniture", "Materials", "Services"];
 
-// suggestedProducts come back as free text like "Round natural jute rug
-// (Textile)" -- pull the parenthesized hint out and fold it onto our
-// three-category shelf so real matches slot into the same layout the
-// mock catalog used.
 function inferCategory(item: string): NeedCategory {
   const hint = item.match(/\(([^)]+)\)\s*$/)?.[1]?.toLowerCase() ?? "";
   if (hint.includes("service") || hint.includes("labor") || hint.includes("install")) {
@@ -30,9 +27,6 @@ function inferCategory(item: string): NeedCategory {
   return "Materials";
 }
 
-// Turn a real, matched product from the search tool into the same shape
-// the rest of this screen (and the budget-check step after it) already
-// knows how to render and total up.
 function toCatalogItem(product: SuggestedProduct, index: number): CatalogItem {
   const price = product.price ?? 0;
   return {
@@ -43,8 +37,6 @@ function toCatalogItem(product: SuggestedProduct, index: number): CatalogItem {
     supplier: "Shopee",
     contact: product.productUrl ?? "shopee.co.th",
     price,
-    // No real budget-tier price for an actual matched product yet, so
-    // there's nothing cheaper to swap it for -- keep it at full price.
     budgetPrice: price,
   };
 }
@@ -66,6 +58,7 @@ export function ShoppingListStep({
   onBack: () => void;
   onContinue: (selectedItems: CatalogItem[]) => void;
 }) {
+  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const matchedProducts = suggestedProducts.filter((p) => p.matched);
   const hasRealMatches = matchedProducts.length > 0;
   const items = hasRealMatches
@@ -82,7 +75,7 @@ export function ShoppingListStep({
         <h1 className="mb-2.5 font-display text-[28px] font-black text-ink">Shopping list &amp; cost</h1>
         <p className="max-w-[56ch] text-[15px] text-ink-soft">
           Everything this design needs, matched to real suppliers and prices.
-          Uncheck anything you already have or want to source yourself.
+          Tap an item to view its details and purchase it.
         </p>
       </div>
 
@@ -94,39 +87,111 @@ export function ShoppingListStep({
             <h2 className="font-display text-base font-bold text-ink">{category}</h2>
             {inCategory.map((item) => {
               const checked = selected[item.id] ?? true;
-              const buyUrl = hasRealMatches ? item.contact : undefined;
+              const isMatched = hasRealMatches;
+              const source = isMatched
+                ? matchedProducts.find((p, i) => `matched-${i}` === item.id)
+                : undefined;
+              const isOpen = openProductId === item.id;
+              const buyUrl = source?.productUrl;
+
               return (
-                <label key={item.id} className="cursor-pointer">
-                  <ShelfItemRow
-                    name={item.name}
-                    meta={item.reason}
-                    price={formatBaht(item.price)}
-                    priceNote={
-                      buyUrl ? (
-                        <a
-                          href={buyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="font-medium text-ink underline-offset-4 hover:underline"
-                        >
-                          Buy on Shopee &rarr;
-                        </a>
-                      ) : (
-                        `${item.supplier} · ${item.contact}`
-                      )
-                    }
-                    muted={!checked}
-                    checkbox={
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => onToggle(item.id)}
-                        className="h-[18px] w-[18px] shrink-0 accent-[var(--ink)]"
+                <div key={item.id} className="border border-line bg-surface">
+                  <div className="flex items-stretch">
+                    <label className="flex min-w-0 flex-1 cursor-pointer">
+                      <ShelfItemRow
+                        name={item.name}
+                        meta={item.reason}
+                        price={formatBaht(item.price)}
+                        priceNote={
+                          isMatched
+                            ? "Tap for product details"
+                            : `${item.supplier} · ${item.contact}`
+                        }
+                        muted={!checked}
+                        checkbox={
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => onToggle(item.id)}
+                            className="h-[18px] w-[18px] shrink-0 accent-[var(--ink)]"
+                          />
+                        }
                       />
-                    }
-                  />
-                </label>
+                    </label>
+                    {isMatched && (
+                      <button
+                        type="button"
+                        onClick={() => setOpenProductId(isOpen ? null : item.id)}
+                        aria-expanded={isOpen}
+                        aria-label={`${isOpen ? "Hide" : "Show"} ${item.name} details`}
+                        className="flex w-12 shrink-0 items-center justify-center border-l border-line font-display text-lg text-ink hover:bg-yellow-soft"
+                      >
+                        {isOpen ? "−" : "+"}
+                      </button>
+                    )}
+                  </div>
+
+                  {isMatched && isOpen && (
+                    <div className="border-t border-line bg-bg p-4 sm:p-5">
+                      <div className="flex flex-col gap-4 sm:flex-row">
+                        {source?.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={source.image}
+                            alt={source.name ?? source.item}
+                            className="h-32 w-full shrink-0 object-cover sm:w-40"
+                          />
+                        ) : (
+                          <div className="flex h-32 w-full shrink-0 items-center justify-center border border-line bg-yellow-soft px-4 text-center text-[11px] uppercase tracking-wide text-ink-faint sm:w-40">
+                            Product image unavailable
+                          </div>
+                        )}
+                        <div className="flex flex-1 flex-col justify-between gap-4">
+                          <div>
+                            <div className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+                              Matched product
+                            </div>
+                            <div className="mt-1 font-display text-base font-bold text-ink">
+                              {source?.name ?? item.name}
+                            </div>
+                            {source?.reason && (
+                              <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
+                                {source.reason}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <div className="text-[11px] uppercase tracking-wide text-ink-faint">Price</div>
+                              <div className="font-display text-xl font-black text-ink">
+                                {source?.price != null
+                                  ? source.currency && source.currency !== "THB"
+                                    ? `${source.currency} ${source.price}`
+                                    : formatBaht(source.price)
+                                  : formatBaht(item.price)}
+                              </div>
+                            </div>
+                            {buyUrl ? (
+                              <a
+                                href={buyUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`${primaryButton} shrink-0`}
+                              >
+                                Buy this product
+                                <span aria-hidden="true">-&gt;</span>
+                              </a>
+                            ) : (
+                              <span className="text-[12px] uppercase tracking-wide text-ink-faint">
+                                Purchase link unavailable
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
