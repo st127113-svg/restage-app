@@ -76,11 +76,18 @@ export function ResultStep({
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [showBudgetCheck, setShowBudgetCheck] = useState(false);
 
-  const matchedProducts = suggestedProducts.filter((p) => p.matched);
+  const matchedProducts = useMemo(
+    () => suggestedProducts.filter((p) => p.matched),
+    [suggestedProducts],
+  );
   const hasRealMatches = matchedProducts.length > 0;
-  const items = hasRealMatches
-    ? matchedProducts.map((p, i) => toCatalogItem(p, i))
-    : CATALOG_BY_ROOM[roomType as RoomType];
+  const items = useMemo(
+    () =>
+      hasRealMatches
+        ? matchedProducts.map((p, i) => toCatalogItem(p, i))
+        : CATALOG_BY_ROOM[roomType as RoomType],
+    [hasRealMatches, matchedProducts, roomType],
+  );
 
   useEffect(() => {
     setSelected((prev) => {
