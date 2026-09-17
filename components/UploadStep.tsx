@@ -103,19 +103,6 @@ export function UploadStep({
             </button>
 
             {error && <p className="text-sm text-red">{error}</p>}
-
-            <div className="flex items-center gap-3.5 border border-line bg-bg p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/example-room.png"
-                alt="Example of a well-lit, straight-on room photo"
-                className="h-11 w-16 shrink-0 object-cover"
-              />
-              <p className="text-sm text-ink-faint">
-                Works best with a well-lit, straight-on shot of the whole
-                room, like the example shown.
-              </p>
-            </div>
           </div>
         </div>
       </div>
