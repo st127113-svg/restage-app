@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // The shared shell every screen mounts under: a wordmark and an
 // aisle-directory strip naming the five phases as departments, the
 // current one lit. Rendered once by app/page.tsx rather than duplicated
@@ -34,14 +36,18 @@ export function AisleHeader({
     return (
       <header className="border-b border-line bg-bg">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-8 py-4 sm:px-16">
-          <div className="flex items-center gap-2.5">
+          <Link
+            href="/"
+            aria-label="Go to DwellWise homepage"
+            className="flex items-center gap-2.5"
+          >
             <span className="relative block h-4 w-4 shrink-0 bg-yellow [clip-path:polygon(0_50%,50%_0,100%_0,100%_100%,50%_100%)]">
               <span className="absolute left-[3px] top-1/2 h-[3px] w-[3px] -translate-y-1/2 rounded-full bg-bg" />
             </span>
             <span className="font-display text-lg font-black uppercase tracking-tight text-ink">
               DwellWise
             </span>
-          </div>
+          </Link>
           <span className="text-xs uppercase tracking-wide text-ink-faint">
             {current.name} &middot; {title}
           </span>
@@ -53,14 +59,18 @@ export function AisleHeader({
   return (
     <header className="border-b-2 border-line-strong bg-bg">
       <div className="mx-auto flex max-w-[1440px] items-center justify-between px-8 py-4 sm:px-16">
-        <div className="flex items-center gap-2.5">
+        <Link
+          href="/"
+          aria-label="Go to DwellWise homepage"
+          className="flex items-center gap-2.5"
+        >
           <span className="relative block h-4 w-4 shrink-0 bg-yellow [clip-path:polygon(0_50%,50%_0,100%_0,100%_100%,50%_100%)]">
             <span className="absolute left-[3px] top-1/2 h-[3px] w-[3px] -translate-y-1/2 rounded-full bg-bg" />
           </span>
           <span className="font-display text-lg font-black uppercase tracking-tight text-ink">
             DwellWise
           </span>
-        </div>
+        </Link>
 
         <nav aria-label="Journey progress" className="hidden items-stretch gap-px md:flex">
           {DEPARTMENTS.map((dept, i) => {
