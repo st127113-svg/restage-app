@@ -278,6 +278,7 @@ export default function Home() {
         title={screen.title}
         stages={screen.stages}
         quiet={screen.quiet}
+        onHome={resetAll}
       />
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col">
         {step === "upload" && <UploadStep onUpload={handleUpload} />}
